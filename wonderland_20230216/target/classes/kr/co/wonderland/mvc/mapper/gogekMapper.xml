@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="gogek">
+	<insert id="add" parameterType="gogekDTO">
+		insert into gogek
+		values(gogek_seq.nextVal,#{gsubject},#{gcontent},#{gwriter},sysdate)
+	</insert>
+
+	<select id="list" parameterType="String" resultType="gogekDTO">
+		select gnum, gwriter, gsubject, gcontent, gdate
+		from gogek
+		where gwriter = #{gwriter}
+		order by 1 desc
+	</select>
+
+	<!-- 문의사항 디테일 페이지에서 문의사항과 그 문의사항의 댓글들을 연결할 ResultMap -->
+	<resultMap type="gogekDTO" id="gogekCommResult">
+		<id property="gnum" column="gnum" javaType="int"/>
+		<result property="gsubject" column="gsubject"/>
+		<result property="gcontent" column="gcontent"/>
+		<result property="gwriter" column="gwriter"/>
+		<result property="gdate" column="gdate"/>
+		<collection property="gogekcomm" javaType="java.util.List" ofType="gogekcDTO">
+			<id property="gcnum" column="gcnum" javaType="int"/>
+			<result property="gcode" column="gcode" javaType="int"/>
+			<result property="gccontent" column="gccontent"/>
+			<result property="gcdate" column="gcdate"/>
+		</collection>
+	</resultMap>
+	<select id="detail" parameterType="int" resultMap="gogekCommResult">
+		select g.gnum, g.gsubject, g.gcontent, g.gwriter, g.gdate, c.gcnum, c.gcode, c.gccontent, c.gcdate
+		from gogek g, gogek_comm c
+		where g.gnum = c.gcode(+) and g.gnum = #{gnum}
+	</select>
+	
+	<!-- 수정 -->
+	<update id="update" parameterType="gogekDTO">
+		update gogek
+		set gsubject = #{gsubject}, gcontent = #{gcontent}
+		where gnum = #{gnum}
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="delete" parameterType="int">
+		delete from gogek
+		where gnum = #{gnum}
+	</delete>
+	
+	<!-- 관리자 댓글 입력 -->
+	<insert id="addComm" parameterType="gogekcDTO">
+		insert into gogek_comm
+		values(gogek_comm_seq.nextVal, #{gcode}, #{gccontent}, sysdate)
+	</insert>
+	<delete id="delComm" parameterType="int">
+		delete from gogek_comm
+		where gcnum = #{gcnum}
+	</delete>
+</mapper>

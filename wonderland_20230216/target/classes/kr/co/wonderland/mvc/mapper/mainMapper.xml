@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="main">
+	<!-- 메인 선생님 존 선생님 사진  -->
+	<select id="teacherList" parameterType="String" resultType="teacherDTO">
+		select tnum, tname, timgn, subject 
+		from (select rownum r_num, a.*
+				from (select * from teacher, (select distinct subject, tcode from lectures, category where ccode(+) = cnum) where tnum = tcode(+) and subject = #{subject}) a)
+    	where r_num between 1 and 4
+	</select>
+
+	<!-- 메인 공지사항 최근 글 -->
+	<select id="noticeList" resultType="noticeDTO">
+		select nnum, nsubject, ndate
+		from ( select rownum r_num, s.* from (
+		        select * from notice
+		        order by nnum desc ) s )
+		where r_num between 1 and 5
+	</select>
+</mapper>

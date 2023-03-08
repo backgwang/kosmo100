@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mypage">
+	<!-- 내 가입 정보 : myloginlog 테이블을 통해서 이번달 전달받을 sid를 통해 login 기록을 카운트해서 이번 달 
+		출석을 얼마나 했는지 count (distinct substr(sstime,0,8)) : 중복값을 제거한 년/월 (23/01)을 통해 
+		오늘 날짜와 비교 -->
+	<select id="info" parameterType="String" resultType="studentDTO">
+		select
+		sname, sid, semail, regdate, count(distinct substr(sstime,0,8)) cnt
+		from student, myloginlog
+		where idn = sid and sid = #{sid} and substr(sstime, 0, 5) = substr(sysdate,
+		0, 5)
+		group by sname, sid, semail, regdate
+	</select>
+	
+	
+<resultMap type="teacherDTO" id="lecturesResultMap">
+	<id property="tnum" column="tnum" javaType="int"/>
+	<result property="tname" column="tname"/>
+	<collection property="lectures" javaType="java.util.List" ofType="lecturesDTO">
+		<id property="lsnum" column="lsnum" javaType="int"/>
+		<result property="lstitle" column="lstitle"/>
+		<result property="lsinfo" column="lsinfo"/>
+		<result property="runtime" column="runtime" javaType="int"/>
+		<result property="cnt" column="cnt" javaType="int"/>
+			<collection property="lecturesReview" javaType="java.util.List" ofType="lecturesrDTO">
+				<id property="lrnum" column="lrnum" javaType="int"/>
+				<result property="lrcontent" column="lrcontent"/>
+				<result property="lrstar" column="lrstar" javaType="int"/>
+				<result property="lrdate" column="lrdate"/>
+			</collection>
+		</collection>
+		
+		<collection property="question" javaType="java.util.List" ofType="teacherqDTO">
+		<id property="tqnum" column="tqnum" javaType="int"/>
+		<result property="tqcontent" column="tqcontent"/>
+		<result property="tqstats" column="tqstats"/>
+		<result property="tqdate" column="tqdate"/>
+		</collection>
+	
+	</resultMap>
+
+	<select id="lectures" parameterType="String"
+		resultMap="lecturesResultMap">
+		select
+		t.tnum, t.tname,
+		ls.lsnum, ls.lstitle, ls.lsinfo, sum(l.lruntime) runtime, count(l.lnum) cnt,
+		lr.lrnum, lr.lrcontent, lr.lrstar, lr.lrdate,
+		tq.tqnum, tq.tqcontent, tq.tqstats, tq.tqdate
+		from teacher t, lectures ls, lecture l, (select * from lectures_review
+		where lrwriter = #{sid}) lr, (select * from teacher_question where
+		tqwriter = #{sid}) tq, enrolment e
+		where t.tnum = ls.tcode(+) and ls.lsnum = l.lscode(+) and ls.lsnum =
+		lr.lscode(+) and t.tnum = tq.tcode(+) and ls.lsnum = e.lscode(+)
+		and e.scode = (select snum from student where sid = #{sid}) and sysdate
+		between startdate and add_months(startdate, 3)
+		group by t.tnum, t.tname, ls.lsnum, ls.lstitle, ls.lsinfo, lr.lrnum,
+		lr.lrcontent, lr.lrstar, lr.lrdate, tq.tqnum, tq.tqcontent,
+		tq.tqstats, tq.tqdate
+	</select>
+
+	
+	<select id="mylectureinfo" parameterType="map" resultType="lecturesDTO">
+		select lsnum, tcode, lstitle, lsinfo, count(lrnum) cnt
+		from lectures, (select * from lectures_review where lrwriter = #{sid})
+		where lsnum = lscode (+) and lsnum = #{lsnum}
+		group by lsnum, tcode, lstitle, lsinfo
+	</select>
+	
+	<resultMap type="teacherDTO" id="endlecture">
+	<id property="tnum" column="tnum"/>
+	<result property="tname" column="tname"/>
+	<result property="timgn" column="timgn"/>
+	<collection property="lectures" javaType="java.util.List" ofType="lecturesDTO">
+	<id property="lsnum" column="lsnum"/>
+	<result property="tcode" column="tcode"/>
+	<result property="lstitle" column="lstitle"/>
+	<result property="lsinfo" column="lsinfo"/>
+	<result property="lsdiff" column="lsdiff"/>
+	<result property="cnt" column="cnt"/>
+	</collection>
+	</resultMap>
+	<select id="endlectures" parameterType="String" resultMap="endlecture">
+	select t.tnum,t.tname,t.timgn,ls.lsnum, ls.tcode, ls.lstitle, ls.lsinfo, ls.lsdiff, count(l.lnum)
+		cnt from teacher t,enrolment e,lectures ls,lecture l where scode=(select snum
+		from student where sid=#{sid}) and ls.lsnum=e.lscode(+) and
+		ls.lsnum=l.lscode(+) and ls.tcode = t.tnum and sysdate not between startdate and
+		add_months(startdate, 3) group by ls.lsnum, ls.tcode, ls.lstitle,
+		ls.lsinfo, ls.lsdiff,t.tname,t.timgn,t.tnum
+	</select>
+</mapper>

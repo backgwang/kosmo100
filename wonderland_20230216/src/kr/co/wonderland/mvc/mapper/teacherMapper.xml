@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="teacher">
+	<!-- 선생님 등록 -->
+	<insert id="add" parameterType="teacherDTO">
+		insert into teacher
+		values(teacher_seq.nextVal, #{tid}, #{tname}, #{tinfo}, #{temail}, #{tpwd}, #{tbday}, #{timgn}, sysdate)
+	</insert>
+
+	<!-- 선생님 리스트 -->
+	<select id="list" resultType="teacherDTO">
+		select tnum, tname, timgn, subject
+		from teacher, (select distinct subject, tcode from lectures, category where ccode = cnum)
+		where tnum = tcode
+	</select>
+
+	<!-- 선생님 등록 시 아이디, 비밀번호 체크 -->
+	<select id="tidChk" parameterType="String" resultType="int">
+		select count(*) from teacher where tid = #{tid}
+	</select>
+	<select id="temailChk" parameterType="String" resultType="int">
+		select count(*) from teacher where temail = #{temail}
+	</select>
+	
+	<!-- 선생님 디테일 페이지 : 강좌 소개 -->
+	<resultMap type="teacherDTO" id="detailResultMap">
+		<id property="tnum" column="tnum" javaType="int"/>
+		<result property="tname" column="tname"/>
+		<result property="tinfo" column="tinfo"/>
+		<result property="timgn" column="timgn"/>
+		<collection property="lectures" javaType="java.util.List" ofType="lecturesDTO">
+			<id property="lsnum" column="lsnum" javaType="int"/>
+			<result property="lstitle" column="lstitle"/>
+			<result property="lsinfo" column="lsinfo"/>
+			<result property="lsdiff" column="lsdiff"/>
+			<result property="runtime" column="runtime" javaType="int"/>
+			<result property="cnt" column="cnt" javaType="int"/>
+		</collection>
+	</resultMap>
+	<select id="detailLectures" parameterType="int" resultMap="detailResultMap">
+		select tnum, tname, tinfo, timgn, subject, lsnum, lstitle, lsinfo, lsdiff, runtime, cnt
+		from teacher, (select lsnum, lstitle, lsinfo, lsdiff, subject, sum(lruntime) runtime, count(lnum) cnt, tcode
+						from lecture, (select * from lectures, category where ccode = cnum)
+						where lsnum = lscode
+						group by lsnum, tcode, subject, lstitle, lsinfo, lsdiff)
+		where tnum = tcode and tnum = #{tnum}
+	</select>
+	<!-- 선생님 디테일 페이지 : 질문 게시판 -->
+	<select id="detailQuestion" parameterType="int" resultType="teacherqDTO">
+		select * from teacher_question where tcode = #{tnum}
+	</select>
+
+	<!-- 선생님 디테일 페이지 : 강좌 후기 -->
+	<select id="detailReview" parameterType="int" resultType="lecturesrDTO">
+		select lscode, lrwriter, lrcontent, lrstar, lrdate
+		from teacher, (select * from lectures, lectures_review where lsnum = lscode)
+		where tnum = tcode and tnum = #{tnum}
+		order by lrdate desc
+	</select>
+	
+	<!-- 선생님 질문 등록 -->
+	<insert id="addQuestion" parameterType="teacherqDTO">
+	insert into teacher_question values(teacher_question_seq.nextVal,#{tcode},#{tqwriter},#{tqcontent},'X',sysdate)
+	</insert>
+</mapper>

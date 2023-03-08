@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lectures">
+	<!-- 관리자 페이지에서 강좌와 강의리스트를 등록 -->
+	<insert id="add" parameterType="lecturesDTO">
+		insert into lectures values (lectures_seq.nextVal, #{tcode}, #{ccode}, #{lstitle}, #{lsinfo}, #{lsdiff})
+	</insert>
+	<insert id="addLecture" parameterType="java.util.List">
+		<selectKey keyProperty="lscode" resultType="int" order="BEFORE">
+			select lectures_seq.currVal from dual
+		</selectKey>
+		<foreach collection="list" item="e" separator=" " open="insert all" close="select * from dual">
+			into lecture values(lecture_seq.nextVal, #{lscode}, #{e.ltitle}, #{e.lruntime})
+		</foreach>
+	</insert>
+	
+	<!-- 강좌 디테일 : 강의 리스트, 리뷰 리스트 -->
+	<resultMap type="teacherDTO" id="detailResultMap">
+		<id property="tnum" column="tnum" javaType="int"/>
+		<result property="tname" column="tname" />
+		<result property="timgn" column="timgn" />
+		<result property="subject" column="subject" />
+		<collection property="lectures" javaType="java.util.List" ofType="lecturesDTO">
+			<id property="lsnum" column="lsnum" javaType="int"/>
+			<result property="lstitle" column="lstitle" />
+			<result property="lsinfo" column="lsinfo" />
+			<result property="lsdiff" column="lsdiff" />
+			<result property="tcode" column="tcode" />
+			<collection property="lecture" javaType="java.util.List" ofType="lectureDTO">
+				<id property="lnum" column="lnum" javaType="int"/>
+				<result property="ltitle" column="ltitle"/>
+				<result property="lruntime" column="lruntime"/>
+			</collection>
+			<collection property="lecturesReview" javaType="java.util.List" ofType="lecturesrDTO">
+				<id property="lrnum" column="lrnum" javaType="int"/>
+				<result property="lrwriter" column="lrwriter"/>
+				<result property="lrcontent" column="lrcontent"/>
+				<result property="lrstar" column="lrstar" javaType="int"/>
+				<result property="lrdate" column="lrdate"/>
+			</collection>
+		</collection>
+	</resultMap>
+	<select id="detail" parameterType="int" resultMap="detailResultMap">
+		select tnum, tname, timgn, subject, lsnum, lstitle, lsinfo, lsdiff, tcode,
+				l.lnum, l.ltitle, l.lruntime, lr.lrnum, lr.lrwriter, lr.lrcontent, lr.lrstar, lr.lrdate
+		from teacher, lectures, lecture l, lectures_review lr,
+				(select subject from lectures, category where ccode = cnum and lsnum = #{lsnum})
+		where tnum = tcode(+) and lsnum = l.lscode(+) and lsnum = lr.lscode(+) and lsnum = #{lsnum}
+	</select>
+	
+	<insert id="addReview" parameterType="lecturesrDTO">
+		insert into lectures_review
+		values(lectures_review_seq.nextVal, #{lscode}, #{lrwriter}, #{lrcontent}, #{lrstar}, sysdate)
+	</insert>
+</mapper>

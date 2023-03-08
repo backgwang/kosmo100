@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="study">
+	<!-- study 모집글 작성 -->
+	<!-- insert 2번째 인자값 나중에 ccode니까 바인딩해야됨 ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ -->
+	<insert id="add" parameterType="studyDTO">
+		insert into study
+		values(study_seq.nextVal, #{ccode}, #{sttitle}, #{stcontent}, #{stwriter}, sysdate, 0)
+	</insert>
+	<!--
+	Study에 여러개의 키워드가 한꺼번에 들어가야합니다
+	study의 stnum을 keyword의 stcode가 foriegn key로 references 하고 있음!
+	
+	stnum에 해당하는 번호에 여러개의 키워드가 들어가야 하므로, 해당 번호를 selectKey로 설정합니다
+	order="BEFORE"는 foreach문이 동작하기 전에 이 키를 세팅한다는 의미입니다
+	selectKey property = "stcode" : keywordDTO stcode 자리에 들어갈 번호를 정하기 위해서
+	sequence : nextVal, currVal
+	stcode는 설정한 하나의 값, e.keyword, e.ktype은 foreach문으로 변하는 값
+	
+	1. study : List<KeywordDTO> keywords ==> parameterType="java.util.List"
+	2. keyword.stcode references study.stnum
+	3. selectKey keyProperty = "stcode" : study_seq.currVal 고정 값
+	4. foreach collection="list" item="e" : e.keyword, e.ktype은 변하는 값
+	-->
+	<!-- 
+	insert all 
+	into keyword values(study_seq.currVal, '토익', 'A') 
+	into keyword values(study_seq.currVal, '유학', 'B') 
+	into keyword values(study_seq.currVal, '프리토킹', 'C') 
+	select * from dual; 
+	 --> 
+	<insert id="addKeyword" parameterType="java.util.List">
+		<selectKey keyProperty="stcode" resultType="int" order="BEFORE">
+			select study_seq.currVal from dual
+		</selectKey>
+		<foreach collection="list" item="e" separator=" " open="insert all" close="select * from dual">
+			into keyword values(#{stcode}, #{e.keyword}, #{e.ktype})
+		</foreach>
+	</insert>
+	
+	<!-- study list : resultMap + select -->
+	<resultMap type="studyDTO" id="listResultMap">
+		<id property="stnum" column="stnum" javaType="int" />
+		<result property="sttitle" column="sttitle"/>
+		<result property="stwriter" column="stwriter"/>
+		<result property="stcontent" column="stcontent"/>
+		<result property="stdate" column="stdate"/>
+		<result property="stcount" column="stcount"/>
+		<result property="sccount" column="sccount"/>
+		<collection property="keywords" javaType="java.util.List" ofType="keywordDTO">
+			<result property="keyword" column="keyword"/>
+		</collection>
+	</resultMap>
+	<select id="listpage" parameterType="searchPageDTO" resultMap="listResultMap">
+		select stnum,
+		<if test="searchType == null and searchValue == null">
+			sttitle, stcontent,
+		</if>
+		<if test="searchType != null and searchValue != null">
+			<choose>
+				<when test="searchType == 1">
+					<![CDATA[replace(sttitle,#{searchValue},'<span style="color:#322cbd">${searchValue}</span>') sttitle, stcontent,]]>
+				</when>
+				<when test="searchType == 2">
+					<![CDATA[sttitle, replace(stcontent,#{searchValue},'<span style="color:#322cbd">${searchValue}</span>') stcontent,]]>
+				</when>
+				<otherwise>
+					sttitle, stcontent,
+				</otherwise>
+			</choose>
+		</if>
+		stwriter, to_char(stdate,'yyyy-MM-dd') stdate, stcount, count(sc.scnum) sccount, k.keyword
+		from ( select rownum r_num, s.* from (
+        select * from study
+        <if test="searchType != null and searchValue != null">
+        	<where>
+				<choose>
+					<when test="searchType == 1">
+						sttitle like '%' || #{searchValue} || '%'
+					</when>
+					<when test="searchType == 2">
+				        stcontent like '%' || #{searchValue} || '%'
+					</when>
+				</choose>
+        	</where>
+		</if>
+        order by stdate desc ) s ), study_comm sc, keyword k
+		where stnum = sc.stcode(+) and stnum = k.stcode(+) and (r_num between #{startPage} and #{endPage})
+		group by stnum, sttitle, stwriter, stcontent, stdate, stcount, k.keyword
+		order by stnum desc
+	</select>
+
+	<select id="searchCount" parameterType="searchPageDTO" resultType="int">
+		select count(*) from study
+		<if test="searchType != null and searchValue != null">
+        	<where>
+				<choose>
+					<when test="searchType == 1">
+						sttitle like '%' || #{searchValue} || '%'
+					</when>
+					<when test="searchType == 2">
+				        stcontent like '%' || #{searchValue} || '%'
+					</when>
+				</choose>
+        	</where>
+		</if>
+	</select>
+
+	<!-- detail : resultMap + select -->
+	<resultMap type="studyDTO" id="detailResultMap"> 
+		<id property="stnum" column="stnum" javaType="int"/> 
+		<result property="sttitle" column="sttitle"/>  
+		<result property="stwriter" column="stwriter"/>  
+		<result property="stcontent" column="stcontent"/>
+		<result property="stdate" column="stdate"/> 
+		<collection property="studycomm" javaType="java.util.List" ofType="studycDTO"> 
+			<id property="scnum" column="scnum" javaType="int"/> 
+			<result property="scwriter" column="scwriter" /> 
+			<result property="sccontent" column="sccontent" />
+			<result property="scdate" column="scdate" />
+		</collection> 
+		<collection property="keywords" javaType="java.util.List" ofType="keywordDTO"> 
+			<result property="keyword" column="keyword"/> 
+		</collection> 
+	</resultMap>
+	<select id="detail" parameterType="int" resultMap="detailResultMap"> 
+		select s.stnum, s.sttitle, s.stwriter, s.stcontent, s.stdate,
+		sc.scnum, sc.scwriter, sc.sccontent, to_char(sc.scdate,'yyyy-MM-dd') scdate, k.keyword
+		from study s, study_comm sc, keyword k
+		where s.stnum = sc.stcode(+) and s.stnum = k.stcode(+) and s.stnum = #{stnum}
+		order by sc.scnum desc
+	</select>
+	<!-- 
+	<select id="detail" parameterType="int" resultMap="detailResultMap">
+	select s.stnum, s.sttitle, s.stwriter, s.stcontent, s.stheadcount, s.startdate, s.enddate, s.stdate, sc.*
+	from study s, ( select rownum, stcode, scwriter, sccontent, scstatus, scdate
+              		from study_comm
+             		where stcode = #{stnum}
+             		order by 1 desc )  sc
+	where s.stnum = sc.stcode and s.stnum = #{stnum}
+	</select>
+	 -->
+	
+	<!-- 조회 수 증가 -->
+	<update id="cnt" parameterType="int">
+		update study
+		set stcount = stcount + 1
+		where stnum = #{stnum}
+	</update>
+	
+	<!-- 스터디 신청 ★최강창헌★ -->
+	<insert id="addComm" parameterType="studycDTO">
+		insert into study_comm
+		values(study_comm_seq.nextVal, #{stcode}, #{sccontent}, #{scwriter}, '대기중', sysdate)
+	</insert>
+</mapper>

@@ -1,0 +1,243 @@
+@charset "utf-8";
+/* 정렬 */
+.pt10 {
+	padding-top: 10px;
+}
+
+.pl5 {
+	padding-left: 5px;
+}
+
+.mt20 .logsrch {
+	text-align: right;
+	color: black;
+}
+
+.mt20 .logsrch a::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 1px;
+	height: 15px;
+	background-color: #ccc;
+}
+
+.mt20 .logsrch a:last-child:after {
+	content: none;
+}
+
+.tab-list tr td a img {
+	width: 350px;
+	height: 300px;
+	border-radius: 25px;
+}
+
+/* 버튼 hover */
+.btn_primary:hover, .btn_primary:focus {
+	color: #322cbd;
+	background-color: #fff;
+	border: 1px solid #322cbd;
+}
+
+.btn_grey:hover {
+	color: #b9b9b9;
+	background-color: #111;
+	border: 1px solid #b9b9b9;
+}
+
+.btn_sblue:hover {
+	color: #32a6cf;
+	background-color: #fff;
+	border: 1px solid #32a6cf;
+}
+
+.btn_line:hover {
+	color: #fff;
+	background-color: #111;
+	border: 1px solid #555;
+}
+
+/* a 링크 */
+#wrap clear a {
+	display: block;
+}
+
+#wrap a:hover {
+	color: inherit;
+	text-decoration: underline;
+}
+
+/* tab 사용 환경*/
+#adminpage .nav-tabs.nav-justified>li>a, .teacherNav .nav-tabs.nav-justified>li>a,
+	#mypage .mypageNav .nav-tabs.nav-justified>li>a, #lectureList .nav-tabs.nav-justified>li>a
+	{
+	border-bottom: 1px solid #322cbd;
+	border-radius: 4px 4px 0 0;
+}
+
+/* my page */
+.mypageNav .nav-tabs.nav-justified>li>a {
+	border-bottom: 1px solid #322cbd;
+	border-radius: 4px 4px 0 0;
+}
+
+.mypageNav .nav-tabs.nav-justified>.active>a, .mypageNav .nav-tabs.nav-justified>.active>a:hover,
+	.mypageNav .nav-tabs.nav-justified>.active>a:focus, #lectureList .nav-tabs.nav-justified>.active>a,
+	#lectureList .nav-tabs.nav-justified>.active>a:hover, #lectureList .nav-tabs.nav-justified>.active>a:focus
+	{
+	color: #fff;
+	background-color: #322cbd;
+	border: 1px solid #322cbd;
+	border-bottom: 1px solid #fff;
+}
+
+#mypage .tab_box .tabs_content {
+	margin-top: 5px;
+}
+
+/* 강좌 리스트 */
+#lectureList .tab-content table tr td {
+	vertical-align: middle;
+}
+
+#lectureList .tab-content #tablist {
+	margin: 0;
+}
+
+#lectureList .tab-content #tablist li a {
+	padding: 8px 14px;
+	display: block;
+}
+
+#lectureList .tab-content #tablist li {
+	position: relative;
+	display: inline-block;
+	margin: 0;
+}
+
+#lectureList .tab-content #tablist li::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 0.1px;
+	height: 15px;
+	background-color: #ccc;
+}
+
+#lectureList .tab-content #tablist li:last-child:after {
+	content: none;
+}
+
+/* 헤더 메뉴 */
+#memberNav {
+	height: 39px;
+	border-bottom: 1px solid #ddd;
+}
+
+#memberNav .member {
+	float: right;
+	display: block;
+}
+
+#memberNav .member li {
+	position: relative;
+	float: left;
+}
+
+#memberNav .member li a {
+	display: block;
+	color: #555;
+	padding: 8px;
+	font-size: 16px;
+	font-weight: 400;
+}
+
+#memberNav .member li::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 1px;
+	height: 15px;
+	background-color: #ccc;
+}
+
+#memberNav li:last-child:after {
+	content: none;
+}
+
+#menuNav nav .left_menu {
+	height: 80px;
+}
+
+.navi li {
+	height: inherit;
+	float: left;
+	display: table;
+}
+
+.navi li a {
+	display: table-cell;
+	height: inherit;
+	color: #555;
+	padding: 16px;
+	font-size: 20px;
+	font-weight: 400;
+	vertical-align: middle;
+}
+
+/* admin page */
+.teacherNav .nav-tabs.nav-justified>li>a {
+	border-bottom: 1px solid #322cbd;
+	border-radius: 4px 4px 0 0;
+}
+
+.teacherNav .nav-tabs.nav-justified>.active>a, .teacherNav .nav-tabs.nav-justified>.active>a:hover,
+	.teacherNav .nav-tabs.nav-justified>.active>a:focus {
+	color: #fff;
+	background-color: #322cbd;
+	border: 1px solid #322cbd;
+	border-bottom: 1px solid #fff;
+}
+
+/* select */
+#select.form-select {
+	padding: 5px 32px 5px 18px;
+	border: 1px solid #ccc;
+	background: url(../images/common/icon_arrow.png) no-repeat
+		calc(100% - 10px) 50%;
+	background-size: 12px 7px;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+.mt50 {
+	margin-bottom: 50px;
+}
+
+/* studyList */
+#studyList .study_title {
+	font-size: 24px;
+	font-weight: 500;
+	color: #111;
+	padding: 10px 10px 10px 0;
+}
+
+#studyList td ul {
+	float: left;
+}
+
+#studyList td {
+	position: relative;
+}
+
+#studyList #studyDetail {
+	position: absolute;
+	right: 20px;
+	bottom: 8px;
+}
